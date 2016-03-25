@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="bebop_follow" pkg="bebop_follow" type="bebop_follow" output="screen">
+    <remap from="~goal_pose" to="/ardrone_control/goal" />
+    <remap from="~target_pose" to="/vicon/helmet/helmet" />
+    <param name="loop_hz" value="60"/>
+    <param name="distance_x" value="1.5" /> <!-- meters -->
+    <param name="distance_y" value="0.0" />
+    <param name="distance_z" value="0.0" />
+    <param name="yaw" value="0.0" /> <!-- degrees -->
+    <param name="use_orientation" value="false"/>
+  </node>
+</launch>

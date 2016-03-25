@@ -1,0 +1,18 @@
+#include "bebop_follow/bebop_follow.h"
+
+int main(int argc, char** argv) {
+  ros::init(argc, argv, "bebop_follow");
+  ros::NodeHandle nh("~");
+
+  BebopFollow bebopFollow(nh);
+
+  try {
+    bebopFollow.spin();
+  }
+  catch (std::runtime_error& ex) {
+    ROS_FATAL_STREAM("[BEBOP_FOLLOW] Runtime error: " << ex.what());
+    return 1;
+  }
+
+  return 0;
+}
