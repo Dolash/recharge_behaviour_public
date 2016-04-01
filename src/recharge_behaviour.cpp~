@@ -200,7 +200,7 @@ void RechargeBehaviour::whileActive()
 	/*Everything's normal, so just report the battery level.*/
 	else
 	{	
-		ROS_INFO("[RECHARGE_BEHAVIOUR] Active Cycle charge level: %f.", chargeLevel);
+		ROS_INFO("[RECHARGE_BEHAVIOUR] Active Cycle charge level: %f. Time since recharge behaviour: %f", chargeLevel, (ros::Time::now() - cycleStartTime).toSec());
 	}
 }
 
@@ -260,7 +260,7 @@ void RechargeBehaviour::spinOnce() {
 	}
 	else
 	{
-		ROS_INFO("[RECHARGE_BEHAVIOUR] poseReceived: %i chargeReceived: %i", poseReceived, chargeReceived);
+		ROS_INFO("[RECHARGE_BEHAVIOUR] poseReceived: %d chargeReceived: %d", poseReceived, chargeReceived);
 	}
   	ros::spinOnce();
 }

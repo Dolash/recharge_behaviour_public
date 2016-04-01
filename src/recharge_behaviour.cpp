@@ -172,13 +172,13 @@ void RechargeBehaviour::whileActive()
 		chargeState = 1;
 	}
 	/*Change from mid charge to low charge*/
-	else if ((chargeLevel < midThreshold && chargeState == 1 && chargeTime == false) || ((ros::Time::now() - cycleStartTime > ros::Duration(midTime)) && chargeState == 0 && chargeTime == true))
+	else if ((chargeLevel < midThreshold && chargeState == 1 && chargeTime == false) || ((ros::Time::now() - cycleStartTime > ros::Duration(midTime)) && chargeState == 1 && chargeTime == true))
 	{
 		ROS_INFO("[RECHARGE_BEHAVIOUR] Active Cycle STATE CHANGE, 1 to 2, charge level: %f.", chargeLevel);
 		chargeState = 2;
 	}
 	/*Below low charge threshold, go recharge*/
-	else if ((chargeLevel < lowThreshold && chargeState == 2 && chargeTime == false) || ((ros::Time::now() - cycleStartTime > ros::Duration(lowTime)) && chargeState == 0 && chargeTime == true))
+	else if ((chargeLevel < lowThreshold && chargeState == 2 && chargeTime == false) || ((ros::Time::now() - cycleStartTime > ros::Duration(lowTime)) && chargeState == 2 && chargeTime == true))
 	{
 		/*If you're within range of the given charger location, signal the dock demo and reset the appropriate state variables*/
 		if (abs(ownPose.transform.translation.x - chargerX) < 0.1 && abs(ownPose.transform.translation.y - chargerY) < 0.1)
@@ -200,20 +200,20 @@ void RechargeBehaviour::whileActive()
 	/*Everything's normal, so just report the battery level.*/
 	else
 	{	
-		ROS_INFO("[RECHARGE_BEHAVIOUR] Active Cycle charge level: %f.", chargeLevel);
+		ROS_INFO("[RECHARGE_BEHAVIOUR] Active Cycle charge level: %f. Time since recharge behaviour: %f", chargeLevel, (ros::Time::now() - cycleStartTime).toSec());
 	}
 }
 
 void RechargeBehaviour::whileRecharging()
 {
 	/*Notes lowest level of charge*/
-	if ((chargeLevel > lowThreshold && chargeState == 2 && chargeTime == false) || ((ros::Time::now() - cycleStartTime > ros::Duration(lowChargeTime)) && chargeState == 0 && chargeTime == true))
+	if ((chargeLevel > lowThreshold && chargeState == 2 && chargeTime == false) || ((ros::Time::now() - cycleStartTime > ros::Duration(lowChargeTime)) && chargeState == 2 && chargeTime == true))
 	{
 		ROS_INFO("[RECHARGE_BEHAVIOUR] Recharge Cycle STATE CHANGE, 2 to 1, charge level: %f.", chargeLevel);
 		chargeState = 1;
 	}
 	/*Crossing from low to middle charge*/
-	else if ((chargeLevel > midThreshold && chargeState == 1 && chargeTime == false) || ((ros::Time::now() - cycleStartTime > ros::Duration(midChargeTime)) && chargeState == 0 && chargeTime == true))
+	else if ((chargeLevel > midThreshold && chargeState == 1 && chargeTime == false) || ((ros::Time::now() - cycleStartTime > ros::Duration(midChargeTime)) && chargeState == 1 && chargeTime == true))
 	{
 		ROS_INFO("[RECHARGE_BEHAVIOUR] Recharge Cycle STATE CHANGE, 1 to 0, charge level: %f.", chargeLevel);
 		chargeState = 0;
