@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   roscpp
   tf
+	std_msgs
 )
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -111,7 +112,8 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
+include_directories(include
+${catkin_INCLUDE_DIRS})
 
 ## Declare a C++ library
 # add_library(recharge_behaviour
@@ -124,16 +126,16 @@ catkin_package(
 # add_dependencies(recharge_behaviour ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-# add_executable(recharge_behaviour_node src/recharge_behaviour_node.cpp)
+ add_executable(recharge_behaviour src/recharge_behaviour.cpp src/main.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(recharge_behaviour_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(recharge_behaviour ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(recharge_behaviour_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(recharge_behaviour
+   ${catkin_LIBRARIES}
+ )
 
 #############
 ## Install ##

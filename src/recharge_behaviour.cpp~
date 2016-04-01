@@ -22,7 +22,7 @@ double normalizeAngle(const double& a) {
 RechargeBehaviour::RechargeBehaviour(ros::NodeHandle& nh_) :
   poseReceived(false),
 	chargeReceived(false),
-	driving(false);
+	driving(false),
   nh(nh_) {
   nh.param<double>("loop_hz", loopHz, 60);
   nh.param<double>("yaw", yaw, 0.0);
@@ -35,7 +35,7 @@ RechargeBehaviour::RechargeBehaviour(ros::NodeHandle& nh_) :
 	/*These position and name parameters are used to identify the particular robot*/
 	nh.param<double>("charger_x", chargerX, -1.3000);
 	nh.param<double>("charger_y", chargerY, 0.6000);
-	nh.param<string>("name", robotName, "cb04");
+	nh.param<std::string>("name", robotName, "cb13");
 
 	/*these parameters are used to control the recharge times when using time rather than battery charge level to control recharging.*/
 	nh.param<bool>("charge_time", chargeTime, true);
@@ -55,13 +55,13 @@ RechargeBehaviour::RechargeBehaviour(ros::NodeHandle& nh_) :
 	chargeState = 0;
 
 /*The subscriptions, one for the robot's own pose, one for the battery's current charge level*/
-  	ownPoseSub = nh.subscribe(std::string(viconTopic), 1, &RechargeBehaviour::ownPoseCallback, this);
-	chargeLevelSub = nh.subscribe(std_msgs::Float32("battery/charge_ratio"), 1, &RechargeBehaviour::chargeLevelCallback, this);
+  	ownPoseSub = nh.subscribe(viconTopic, 1, &RechargeBehaviour::ownPoseCallback, this);
+	chargeLevelSub = nh.subscribe("battery/charge_ratio", 1, &RechargeBehaviour::chargeLevelCallback, this);
 
 /*The publishers, one to cmd_vel to send movement commands, one to the dock topic when it's time to dock, and one to the undock topic when it's time to undock.*/
-	cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", Twist, queue_size=10);
-	dock_pub = nh.advertise<std_msgs::Empty>("dock", Empty, queue_size=10);
-	undock_pub = nh.advertise<std_msgs::Empty>("undock", Empty, queue_size=10);
+	cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 10);
+	dock_pub = nh.advertise<std_msgs::Empty>("dock", 10);
+	undock_pub = nh.advertise<std_msgs::Empty>("undock", 10);
 
   	ROS_INFO("[RECHARGE_BEHAVIOUR] Initialized.");
 }
@@ -114,9 +114,9 @@ void RechargeBehaviour::approachCharger()
 	float turnRate = 0.0;
 	float velocity = 0.0;
 	/*Since the vicon bridge is giving us quaternions, we'll want to get our own yaw back out of it.*/
-	yaw = getYaw(ownPose.transform.rotation)
+	yaw = getYaw(ownPose.transform.rotation);
 	/*Now we calculate the yaw we'd want from our current position to be driving toward the recharge station.*/
-	desiredAngle = getDesiredAngle(chargerX, chargerY, ownPose.position.x, ownPose.position.x;
+	desiredAngle = getDesiredAngle(chargerX, chargerY, ownPose.transform.translation.x, ownPose.transform.translation.y);
 
 
 
@@ -134,7 +134,7 @@ void RechargeBehaviour::approachCharger()
 			move_cmd.angular.z = 0.0;
 		}
 		/*Now, if we're currently turning and have successfully turned to within 0.15 of what we want, start driving again.*/
-		else if ((yaw > (desiredAngle - 0.15)) && (currentZRotation < (yaw + 0.15)) && (driving == false))
+		else if ((yaw > (desiredAngle - 0.15)) && (yaw < (yaw + 0.15)) && (driving == false))
 			
 		{
 			move_cmd.linear.x = 0.2;
@@ -142,7 +142,7 @@ void RechargeBehaviour::approachCharger()
 			driving = true;
 		}
 		/*And again, if we're within ~0.15 but it's at one of the borders, allow it too.*/
-		else if ((((yaw > 3) && (desiredAngle < -3)) || ((currentZRotation < -3) && (yaw > 3))) && (driving == false))
+		else if ((((yaw > 3) && (desiredAngle < -3)) || ((yaw < -3) && (yaw > 3))) && (driving == false))
 			
 		{
 			move_cmd.linear.x = 0.2;
@@ -163,7 +163,7 @@ void RechargeBehaviour::approachCharger()
 }
 
 /*The battery level monitor while the robot is active, marks the decrease in battery level until it kills them*/
-void RechargeBehaviour::whileActive(const geometry_msgs::TransformStamped::ConstPtr& pose)
+void RechargeBehaviour::whileActive()
 {
 	/*Change from high charge to mid charge*/
 	if ((chargeLevel < highThreshold && chargeState == 0 && chargeTime == false) || ((ros::Time::now() - cycleStartTime > ros::Duration(highTime)) && chargeState == 0 && chargeTime == true))
@@ -181,11 +181,11 @@ void RechargeBehaviour::whileActive(const geometry_msgs::TransformStamped::Const
 	else if ((chargeLevel < lowThreshold && chargeState == 2 && chargeTime == false) || ((ros::Time::now() - cycleStartTime > ros::Duration(lowTime)) && chargeState == 0 && chargeTime == true))
 	{
 		/*If you're within range of the given charger location, signal the dock demo and reset the appropriate state variables*/
-		if (abs(ownPose.position.x - chargerX) < 0.1 && abs(goalPose.position.y - chargerY) < 0.1)
+		if (abs(ownPose.transform.translation.x - chargerX) < 0.1 && abs(ownPose.transform.translation.y - chargerY) < 0.1)
 		{
 			/*Activate docking demo by sending signal to /dock*/
 			ROS_INFO("[RECHARGE_BEHAVIOUR] Active Cycle DOCK APPROACHED, charge level: %f.", chargeLevel);
-			std_msg::Empty goDock;
+			std_msgs::Empty goDock;
 			dock_pub.publish(goDock);
 			recharging = true;
 			cycleStartTime = ros::Time::now();
@@ -204,7 +204,7 @@ void RechargeBehaviour::whileActive(const geometry_msgs::TransformStamped::Const
 	}
 }
 
-void RechargeBehaviour::whileRecharging(const geometry_msgs::TransformStamped::ConstPtr& pose)
+void RechargeBehaviour::whileRecharging()
 {
 	/*Notes lowest level of charge*/
 	if ((chargeLevel > lowThreshold && chargeState == 2 && chargeTime == false) || ((ros::Time::now() - cycleStartTime > ros::Duration(lowChargeTime)) && chargeState == 0 && chargeTime == true))
@@ -222,7 +222,7 @@ void RechargeBehaviour::whileRecharging(const geometry_msgs::TransformStamped::C
 	else if ((chargeLevel > highThreshold && chargeState == 0 && chargeTime == false) || ((ros::Time::now() - cycleStartTime > ros::Duration(highChargeTime)) && chargeState == 0 && chargeTime == true))
 	{
 		/*If you are sufficiently far away from the charger position, resume activity.*/
-		if (abs(ownPose.position.x - chargerX) > 0.1 || abs(goalPose.position.y - chargerY) > 0.1)
+		if (abs(ownPose.transform.translation.x - chargerX) > 0.1 || abs(ownPose.transform.translation.y - chargerY) > 0.1)
 		{
 			ROS_INFO("[RECHARGE_BEHAVIOUR] Recharge Cycle UNDOCKING COMPLETE, charge level: %f.", chargeLevel);
 			recharging = false;
@@ -232,7 +232,7 @@ void RechargeBehaviour::whileRecharging(const geometry_msgs::TransformStamped::C
 		else
 		{
 			ROS_INFO("[RECHARGE_BEHAVIOUR] Recharge Cycle UNDOCKING, charge level: %f.", chargeLevel);
-			std_msg::Empty goDock;
+			std_msgs::Empty goDock;
 			undock_pub.publish(goDock);
 			move_cmd.linear.x = -0.1;
 			move_cmd.angular.z = 0.0;

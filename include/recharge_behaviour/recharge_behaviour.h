@@ -3,10 +3,11 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Twist.h>
 //#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
-#include <string>
-
+#include <std_msgs/Empty.h>
+#include <std_msgs/Float32.h>
 #define PI 3.14159
 #define TWO_PI 6.283185
 
@@ -35,8 +36,8 @@ class RechargeBehaviour {
 	/*parameters that name the robot, give it the vicon topic to listen to for its localization and specify where its charger is in the world*/
 	double chargerX;
 	double chargerY;
-	string robotName;
-	string viconTopic;
+	std::string robotName;
+	std::string viconTopic;
 
 	/*parameters that control when the robot goes to recharge if using time*/
 	ros::Time cycleStartTime;
@@ -50,7 +51,11 @@ class RechargeBehaviour {
 
     //void targetPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& pose);
     	void ownPoseCallback(const geometry_msgs::TransformStamped::ConstPtr& pose);
-	void chargeLevelCallback(const float charge);
+	void chargeLevelCallback(const std_msgs::Float32 charge);
+	float getDesiredAngle(float targetX, float targetY, float currentXCoordinateIn, float currentYCoordinateIn);
+	void approachCharger();
+	void whileActive();
+	void whileRecharging();
 
   protected:
     	ros::NodeHandle nh;

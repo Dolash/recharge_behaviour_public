@@ -23,7 +23,7 @@
 	<param name="charger_x" value="-1.3000" />
 	<param name="charger_y" value="0.6000" />
 
-<param name ="name" value="cb14" />
+<param name ="name" value="cb13" />
 
 
   </node>
