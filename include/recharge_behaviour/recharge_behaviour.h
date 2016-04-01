@@ -49,24 +49,20 @@ class RechargeBehaviour {
 	double lowChargeTime;
 
     //void targetPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& pose);
-    void ownPoseCallback(const geometry_msgs::TransformStamped::ConstPtr& pose);
+    	void ownPoseCallback(const geometry_msgs::TransformStamped::ConstPtr& pose);
 	void chargeLevelCallback(const float charge);
 
   protected:
-    ros::NodeHandle nh;
-    ros::Subscriber ownPoseSub;
+    	ros::NodeHandle nh;
+    	ros::Subscriber ownPoseSub;
 	ros::Subscriber chargeLevelSub;
-    //ros::Publisher posePub;
+
 	ros::Publisher cmd_vel_pub;
 	ros::Publisher dock_pub;
 	ros::Publisher undock_pub;
 
-    
-    // Pose of the target to follow
-    //geometry_msgs::PoseStamped targetPose;
-    geometry_msgs::TransformStamped ownPose;
-    // Pose to publish
-    //geometry_msgs::Pose goalPose;
+    	geometry_msgs::TransformStamped ownPose;
+
 	/*Movement orders for Create*/
 	geometry_msgs::Twist move_cmd;
 

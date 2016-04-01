@@ -46,17 +46,16 @@ RechargeBehaviour::RechargeBehaviour(ros::NodeHandle& nh_) :
 	nh.param<double>("mid_charge_time", midChargeTime, 20);
 	nh.param<double>("low_charge_time", lowChargeTime, 10);
 
-
 	viconTopic = "/vicon/" + robotName + "/" + robotName;
 	chargeLevel = 0.0;
 	cycleStartTime = ros::Time::now();
   // Convert yaw to radians
-  yaw = yaw * 3.14159 / 180.0;
+  	yaw = yaw * 3.14159 / 180.0;
 	recharging = false;
 	chargeState = 0;
 
 /*The subscriptions, one for the robot's own pose, one for the battery's current charge level*/
-  ownPoseSub = nh.subscribe(std::string(viconTopic), 1, &RechargeBehaviour::ownPoseCallback, this);
+  	ownPoseSub = nh.subscribe(std::string(viconTopic), 1, &RechargeBehaviour::ownPoseCallback, this);
 	chargeLevelSub = nh.subscribe(std_msgs::Float32("battery/charge_ratio"), 1, &RechargeBehaviour::chargeLevelCallback, this);
 
 /*The publishers, one to cmd_vel to send movement commands, one to the dock topic when it's time to dock, and one to the undock topic when it's time to undock.*/
@@ -64,23 +63,23 @@ RechargeBehaviour::RechargeBehaviour(ros::NodeHandle& nh_) :
 	dock_pub = nh.advertise<std_msgs::Empty>("dock", Empty, queue_size=10);
 	undock_pub = nh.advertise<std_msgs::Empty>("undock", Empty, queue_size=10);
 
-  ROS_INFO("[RECHARGE_BEHAVIOUR] Initialized.");
+  	ROS_INFO("[RECHARGE_BEHAVIOUR] Initialized.");
 }
 
 RechargeBehaviour::~RechargeBehaviour() {
-  ROS_INFO("[RECHARGE_BEHAVIOUR] Destroyed.");
+  	ROS_INFO("[RECHARGE_BEHAVIOUR] Destroyed.");
 }
 
 /*For the pose subscriber, extracting that pose from the message.*/
 void RechargeBehaviour::ownPoseCallback(const geometry_msgs::TransformStamped::ConstPtr& pose) {
-  ownPose = *pose;
-  poseReceived = true;
+  	ownPose = *pose;
+  	poseReceived = true;
 }
 
 /*For the charge level subscriber, extracting that charge level from the message.*/
 void RechargeBehaviour::chargeLevelCallback(const float charge) {
-  chargeLevel = charge;
-  chargeReceived = true;
+  	chargeLevel = charge;
+  	chargeReceived = true;
 }
 
 
@@ -88,8 +87,6 @@ void RechargeBehaviour::chargeLevelCallback(const float charge) {
 float RechargeBehaviour::getDesiredAngle(float targetX, float targetY, float currentXCoordinateIn, float currentYCoordinateIn)
 {
 	float result = 0;
-	float originX = 0.0;
-	float originY = 0.0;
 
 	//I'm making this adjustment because I am turning the robot's current position into the origin, so the origin x and y are really currentPositionX/Y - currentPositionX/Y. 
 	//I'm doing this for my brain's sake.
@@ -113,7 +110,6 @@ float RechargeBehaviour::getDesiredAngle(float targetX, float targetY, float cur
 /*When going to recharge, call this to determine what speed forward/what turn angle you need in order to home in on the given charger location*/
 void RechargeBehaviour::approachCharger()
 {
-
 	float desiredAngle = 0;
 	float turnRate = 0.0;
 	float velocity = 0.0;
@@ -162,7 +158,7 @@ void RechargeBehaviour::approachCharger()
 		}
 
 	
-    	cmd_vel_pub.publish(move_cmd);
+    		cmd_vel_pub.publish(move_cmd);
   
 }
 

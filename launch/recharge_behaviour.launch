@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <launch>
   <node name="recharge_behaviour" pkg="recharge_behaviour" type="recharge_behaviour" output="screen">
-    <remap from="goal_pose" to="/ardrone_control/goal" />
-    <remap from="target_pose" to="/vicon/helmet/helmet" />
+    <!--<remap from="goal_pose" to="/ardrone_control/goal" />
+    <remap from="target_pose" to="/vicon/helmet/helmet" /> I'm leaving these in in case I need to change how I remap stuff for the battery and vicon subscribers -->
 
 	<param name="loop_hz" value="60"/>
 	<param name="yaw" value="0.0" /> 
@@ -23,7 +23,7 @@
 	<param name="charger_x" value="-1.3000" />
 	<param name="charger_y" value="0.6000" />
 
-<param name ="name" value="cb04" />
+<param name ="name" value="cb14" />
 
 
   </node>

@@ -21,7 +21,8 @@ class RechargeBehaviour {
 	bool chargeReceived;
 	/*Used while homing in on recharge location, to differentiate between when you stop to turn toward the target and start driving forward*/
 	bool driving;
-
+	
+	/*parameters that control when the robot goes to recharge if using battery level information*/
 	double chargeLevel;
 	double highThreshold;
 	double midThreshold;
@@ -37,6 +38,7 @@ class RechargeBehaviour {
 	string robotName;
 	string viconTopic;
 
+	/*parameters that control when the robot goes to recharge if using time*/
 	ros::Time cycleStartTime;
 	bool chargeTime;
 	double highTime;
