@@ -2,7 +2,7 @@
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "recharge_behaviour");
-  ros::NodeHandle nh("~");
+  ros::NodeHandle nh;
 
   RechargeBehaviour rechargeBehaviour(nh);
 

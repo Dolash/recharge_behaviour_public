@@ -258,6 +258,10 @@ void RechargeBehaviour::spinOnce() {
 			whileRecharging();
 		}
 	}
+	else
+	{
+		ROS_INFO("[RECHARGE_BEHAVIOUR] poseReceived: %d chargeReceived: %d", poseReceived, chargeReceived);
+	}
   	ros::spinOnce();
 }
 

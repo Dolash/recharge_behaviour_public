@@ -77,8 +77,8 @@ void RechargeBehaviour::ownPoseCallback(const geometry_msgs::TransformStamped::C
 }
 
 /*For the charge level subscriber, extracting that charge level from the message.*/
-void RechargeBehaviour::chargeLevelCallback(const float charge) {
-  	chargeLevel = charge;
+void RechargeBehaviour::chargeLevelCallback(const std_msgs::Float32 charge) {
+  	chargeLevel = charge.data;
   	chargeReceived = true;
 }
 
@@ -257,6 +257,10 @@ void RechargeBehaviour::spinOnce() {
 		{
 			whileRecharging();
 		}
+	}
+	else
+	{
+		ROS_INFO("[RECHARGE_BEHAVIOUR] poseReceived: %i chargeReceived: %i", poseReceived, chargeReceived);
 	}
   	ros::spinOnce();
 }
