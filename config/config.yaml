@@ -1,0 +1,14 @@
+loop_hz: 30.0
+yaw: 0.0
+
+high_threshold: 0.70
+mid_threshold: 0.60
+low_threshold: 0.50
+
+high_charge_time: 30.0
+mid_charge_time: 20.0
+low_charge_time: 10.0
+
+high_time: 30.0
+mid_time: 20.0
+low_time: 10.0
