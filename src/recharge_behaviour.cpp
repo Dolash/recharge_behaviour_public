@@ -19,55 +19,59 @@ double normalizeAngle(const double& a) {
   return angle;
 }
 
-RechargeBehaviour::RechargeBehaviour(ros::NodeHandle& nh_) :
+RechargeBehaviour::RechargeBehaviour(ros::NodeHandle& nh) :
   poseReceived(false),
 	chargeReceived(false),
 	driving(false),
-  nh(nh_) {
-  nh.param<double>("loop_hz", loopHz, 60);
-  nh.param<double>("yaw", yaw, 0.0);
+  nh(nh),
+  privNh("~") {
+  privNh.param<double>("loop_hz", loopHz, 30);
+  privNh.param<double>("yaw", yaw, 0.0);
 
 	/*these parameters control at what battery levels to go recharge and to stop recharging.*/
-	nh.param<double>("high_threshold", highThreshold, 0.70);
-	nh.param<double>("mid_threshold", midThreshold, 0.60);
-	nh.param<double>("low_threshold", lowThreshold, 0.50);
-	
+	privNh.param<double>("high_threshold", highThreshold, 0.70);
+	privNh.param<double>("mid_threshold", midThreshold, 0.60);
+	privNh.param<double>("low_threshold", lowThreshold, 0.50);
+
 	/*These position and name parameters are used to identify the particular robot*/
-	nh.param<double>("charger_x", chargerX, -1.3000);
-	nh.param<double>("charger_y", chargerY, 0.6000);
-	nh.param<std::string>("name", robotName, "cb13");
+	privNh.param<double>("charger_x", chargerX, -1.3000);
+	privNh.param<double>("charger_y", chargerY, 0.6000);
+	privNh.param<std::string>("name", robotName, "cb13");
 
 	/*these parameters are used to control the recharge times when using time rather than battery charge level to control recharging.*/
-	nh.param<bool>("charge_time", chargeTime, true);
-	nh.param<double>("high_time", highTime, 30);
-	nh.param<double>("mid_time", midTime, 20);
-	nh.param<double>("low_time", lowTime, 10);
-	nh.param<double>("high_charge_time", highChargeTime, 30);
-	nh.param<double>("mid_charge_time", midChargeTime, 20);
-	nh.param<double>("low_charge_time", lowChargeTime, 10);
+	privNh.param<bool>("charge_time", chargeTime, true);
+	privNh.param<double>("high_time", highTime, 30);
+	privNh.param<double>("mid_time", midTime, 20);
+	privNh.param<double>("low_time", lowTime, 10);
+	privNh.param<double>("high_charge_time", highChargeTime, 30);
+	privNh.param<double>("mid_charge_time", midChargeTime, 20);
+	privNh.param<double>("low_charge_time", lowChargeTime, 10);
 
-	viconTopic = "/vicon/" + robotName + "/" + robotName;
+  const std::string poseTopic = robotName + "/pose";
 	chargeLevel = 0.0;
 	cycleStartTime = ros::Time::now();
   // Convert yaw to radians
-  	yaw = yaw * 3.14159 / 180.0;
+ 	yaw = yaw * PI / 180.0;
 	recharging = false;
 	chargeState = 0;
 
-/*The subscriptions, one for the robot's own pose, one for the battery's current charge level*/
-  	ownPoseSub = nh.subscribe(viconTopic, 1, &RechargeBehaviour::ownPoseCallback, this);
+  /*The subscriptions, one for the robot's own pose, one for the battery's current charge level*/
+  ownPoseSub = nh.subscribe(poseTopic, 1, &RechargeBehaviour::ownPoseCallback, this);
 	chargeLevelSub = nh.subscribe("battery/charge_ratio", 1, &RechargeBehaviour::chargeLevelCallback, this);
 
-/*The publishers, one to cmd_vel to send movement commands, one to the dock topic when it's time to dock, and one to the undock topic when it's time to undock.*/
-	cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 10);
-	dock_pub = nh.advertise<std_msgs::Empty>("dock", 10);
-	undock_pub = nh.advertise<std_msgs::Empty>("undock", 10);
+  /* The publishers, one to cmd_vel to send movement commands,
+   * one to the dock topic when it's time to dock,
+   * and one to the undock topic when it's time to undock.
+   */
+	cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 30);
+	dock_pub = nh.advertise<std_msgs::Empty>("dock", 30);
+	undock_pub = nh.advertise<std_msgs::Empty>("undock", 30);
 
-  	ROS_INFO("[RECHARGE_BEHAVIOUR] Initialized.");
+	ROS_INFO("[RECHARGE_BEHAVIOUR] Initialized.");
 }
 
 RechargeBehaviour::~RechargeBehaviour() {
-  	ROS_INFO("[RECHARGE_BEHAVIOUR] Destroyed.");
+ 	ROS_INFO("[RECHARGE_BEHAVIOUR] Destroyed.");
 }
 
 /*For the pose subscriber, extracting that pose from the message.*/
@@ -88,7 +92,7 @@ float RechargeBehaviour::getDesiredAngle(float targetX, float targetY, float cur
 {
 	float result = 0;
 
-	//I'm making this adjustment because I am turning the robot's current position into the origin, so the origin x and y are really currentPositionX/Y - currentPositionX/Y. 
+	//I'm making this adjustment because I am turning the robot's current position into the origin, so the origin x and y are really currentPositionX/Y - currentPositionX/Y.
 	//I'm doing this for my brain's sake.
 	float nTargetX = (targetX - currentXCoordinateIn);
 	float nTargetY = (targetY - currentYCoordinateIn);
@@ -96,7 +100,7 @@ float RechargeBehaviour::getDesiredAngle(float targetX, float targetY, float cur
 
 	/*So this calculates, if our robot was at the origin and our target is at the appropriate relative position, what angle should we be turned to face them?*/
 	float angbc = atan2((nTargetY), (nTargetX));
-	result = angbc; 
+	result = angbc;
 	result = (result - 1.57595);
 	/*A quick fix in the event that this desired angle adjustment takes us "off the edge" of pi*/
 	if (result < -3.1518)
@@ -122,20 +126,20 @@ void RechargeBehaviour::approachCharger()
 
 		/*If we're moving and our current yaw is within 0.25 of what we want, keep driving*/
 		if ((yaw > (desiredAngle - 0.25)) && (yaw < (desiredAngle + 0.25)) && (driving == true))
-			
+
 		{
 			move_cmd.linear.x = 0.2;
 			move_cmd.angular.z = 0.0;
 		}
 		/*However, if we're near the "seam" where ~3.1415 becomes ~-3.1415, we need to be fiddly if our desired angle is on the other side*/
-		else if ((((yaw > 2.9) && (desiredAngle < -2.9)) || ((yaw < -2.9) && (desiredAngle > 2.9))) && (driving == true))	
+		else if ((((yaw > 2.9) && (desiredAngle < -2.9)) || ((yaw < -2.9) && (desiredAngle > 2.9))) && (driving == true))
 		{
 			move_cmd.linear.x = 0.2;
 			move_cmd.angular.z = 0.0;
 		}
 		/*Now, if we're currently turning and have successfully turned to within 0.15 of what we want, start driving again.*/
 		else if ((yaw > (desiredAngle - 0.15)) && (yaw < (yaw + 0.15)) && (driving == false))
-			
+
 		{
 			move_cmd.linear.x = 0.2;
 			move_cmd.angular.z = 0.0;
@@ -143,7 +147,7 @@ void RechargeBehaviour::approachCharger()
 		}
 		/*And again, if we're within ~0.15 but it's at one of the borders, allow it too.*/
 		else if ((((yaw > 3) && (desiredAngle < -3)) || ((yaw < -3) && (yaw > 3))) && (driving == false))
-			
+
 		{
 			move_cmd.linear.x = 0.2;
 			move_cmd.angular.z = 0.0;
@@ -157,9 +161,9 @@ void RechargeBehaviour::approachCharger()
 			driving = false;
 		}
 
-	
+
     		cmd_vel_pub.publish(move_cmd);
-  
+
 }
 
 /*The battery level monitor while the robot is active, marks the decrease in battery level until it kills them*/
@@ -199,7 +203,7 @@ void RechargeBehaviour::whileActive()
 	}
 	/*Everything's normal, so just report the battery level.*/
 	else
-	{	
+	{
 		ROS_INFO("[RECHARGE_BEHAVIOUR] Active Cycle charge level: %f. Time since recharge behaviour: %f", chargeLevel, (ros::Time::now() - cycleStartTime).toSec());
 	}
 }
@@ -241,7 +245,7 @@ void RechargeBehaviour::whileRecharging()
 	}
 	/*Nothing changes, keep recharging and report battery level*/
 	else
-	{	
+	{
 		ROS_INFO("[RECHARGE_BEHAVIOUR] Recharge Cycle charge level: %f.", chargeLevel);
 	}
 }
