@@ -7,6 +7,8 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/UInt16.h>
+#include <vector>
 
 #define PI 3.14159
 #define TWO_PI 6.283185
@@ -25,17 +27,22 @@ private:
 
 	/*parameters that control when the robot goes to recharge if using battery level information*/
 	double chargeLevel;
+	std::vector<double> chargeHistory;
+	double chargeLatest;
 	double highThreshold;
 	double midThreshold;
 	double lowThreshold;
 
 	/*state variables*/
-	bool  recharging;
+	bool recharging;
 	int chargeState;
+	int buoyPresence;
 
 	/*parameters that name the robot, and specify where its charger is in the world*/
 	double chargerX;
-	double chargerY;
+	double chargerY1;
+	double chargerY2;
+	bool chargerPatrolReset;
 	std::string robotName;
 
 	/*parameters that control when the robot goes to recharge if using time*/
@@ -48,18 +55,21 @@ private:
 	double midChargeTime;
 	double lowChargeTime;
 
-  void ownPoseCallback(const geometry_msgs::TransformStamped::ConstPtr& pose);
+  	void ownPoseCallback(const geometry_msgs::TransformStamped::ConstPtr& pose);
 	void chargeLevelCallback(const std_msgs::Float32 charge);
+	void buoyCallback(const std_msgs::UInt16 irReading);
 	float getDesiredAngle(float targetX, float targetY, float currentXCoordinateIn, float currentYCoordinateIn);
 	void approachCharger();
 	void whileActive();
 	void whileRecharging();
+	
 
 protected:
   ros::NodeHandle nh;
   ros::NodeHandle privNh;
  	ros::Subscriber ownPoseSub;
 	ros::Subscriber chargeLevelSub;
+	ros::Subscriber buoySub;
 
 	ros::Publisher cmd_vel_pub;
 	ros::Publisher dock_pub;

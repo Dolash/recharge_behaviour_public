@@ -2,8 +2,8 @@
 <launch>
   <arg name="name" default="cb01"/>
   <arg name="time_based" default="true"/>
-  <arg name="charger_x" default="0.0"/>
-  <arg name="charger_y" default="0.0"/>
+  <!--<arg name="charger_x" default="0.0"/>
+  <arg name="charger_y" default="0.0"/>-->
   <arg name="config_file" default="$(find recharge_behaviour)/config/config.yaml"/>
 
   <node name="recharge_behaviour" pkg="recharge_behaviour" type="recharge_behaviour" output="screen">
@@ -13,7 +13,7 @@
     <rosparam command="load" file="$(arg config_file)"/>
     <param name ="~name" value="$(arg name)" />
     <param name="~charge_time" value="$(arg time_based)"/>
-	  <param name="~charger_x" value="$(arg charger_x)" />
-	  <param name="~charger_y" value="$(arg charger_y)" />
+	  <!--<param name="~charger_x" value="$(arg charger_x)" />
+	  <param name="~charger_y" value="$(arg charger_y)" />-->
   </node>
 </launch>
