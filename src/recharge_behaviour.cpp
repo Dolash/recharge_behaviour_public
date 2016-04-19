@@ -60,6 +60,9 @@ RechargeBehaviour::RechargeBehaviour(ros::NodeHandle& nh) :
 	buoyPresence = 0;
 	chargeLatest = 0;
 	cycleStartTime = ros::Time::now();
+	backupTime = ros::Time::now();
+	debugTime = ros::Time::now();
+	backupTimeCheck = false;
   // Convert yaw to radians
  	yaw = yaw * PI / 180.0;
 	recharging = false;
@@ -232,9 +235,10 @@ void RechargeBehaviour::whileActive()
 		}
 	}
 	/*Everything's normal, so just report the battery level.*/
-	else
+	else if (ros::Time::now() > debugTime + ros::Duration(30))
 	{
-		//ROS_INFO("[RECHARGE_BEHAVIOUR] Active Cycle charge level: %f. Time since recharge behaviour: %f", chargeLevel, (ros::Time::now() - cycleStartTime).toSec());
+		ROS_INFO("[RECHARGE_BEHAVIOUR] Active Cycle charge level: %f", chargeLevel);
+		debugTime = ros::Time::now();
 	}
 }
 
@@ -251,15 +255,22 @@ void RechargeBehaviour::whileRecharging()
 	{
 		ROS_INFO("[RECHARGE_BEHAVIOUR] Recharge Cycle STATE CHANGE, 1 to 0, charge level: %f.", chargeLevel);
 		chargeState = 0;
+		
 	}
 	/*Crossing to high charge, time to undock*/
 	else if ((chargeLevel > highThreshold && chargeState == 0 && chargeTime == false) || ((ros::Time::now() - cycleStartTime > ros::Duration(highChargeTime)) && chargeState == 0 && chargeTime == true))
 	{
+		if (backupTimeCheck == false)
+		{
+			backupTime = ros::Time::now();
+			backupTimeCheck = true;
+		}
 		/*If you are sufficiently far away from the charger position, resume activity.*/
-		if (ownPose.transform.translation.x > chargerX)
+		else if (ros::Time::now() > (backupTime + ros::Duration(15)))
 		{
 			ROS_INFO("[RECHARGE_BEHAVIOUR] Recharge Cycle UNDOCKING COMPLETE, charge level: %f.", chargeLevel);
 			recharging = false;
+			backupTimeCheck = false;
 			cycleStartTime = ros::Time::now();
 			buoyPresence = 0;
 		}
@@ -275,15 +286,18 @@ void RechargeBehaviour::whileRecharging()
 		}
 	}
 	/*Nothing changes, keep recharging and report battery level*/
-	else
+	else if (ros::Time::now() > debugTime + ros::Duration(30))
 	{
-		//ROS_INFO("[RECHARGE_BEHAVIOUR] Recharge Cycle charge level: %f.", chargeLevel);
+		ROS_INFO("[RECHARGE_BEHAVIOUR] Recharge Cycle charge level: %f.", chargeLevel);
+		debugTime = ros::Time::now();
 	}
 }
 
 /*One run of the loop, picks which behaviour to do depending on whether the robot is currently seeking to recharge or not. Only fires if it can hear from its subscriptions*/
 void RechargeBehaviour::spinOnce() {
-	if (poseReceived && chargeReceived) {
+	if (poseReceived && chargeReceived) 
+	{
+	
 		/*Updating the set of power level reports for the last minute*/
 		chargeHistory.push_back(chargeLatest);
 		if (chargeHistory.size() > loopHz*60)

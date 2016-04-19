@@ -47,7 +47,10 @@ private:
 
 	/*parameters that control when the robot goes to recharge if using time*/
 	ros::Time cycleStartTime;
+	ros::Time backupTime;
+	ros::Time debugTime;
 	bool chargeTime;
+	bool backupTimeCheck;
 	double highTime;
 	double midTime;
 	double lowTime;
