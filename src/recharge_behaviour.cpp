@@ -210,7 +210,7 @@ void RechargeBehaviour::whileActive()
 	/*Below low charge threshold, go recharge*/
 	else if ((chargeLevel < lowThreshold && chargeState == 2 && chargeTime == false) || ((ros::Time::now() - cycleStartTime > ros::Duration(lowTime)) && chargeState == 2 && chargeTime == true))
 	{
-		if (buoyPresence >= 242)
+		if (buoyPresence >= 242 && buoyPresence != 255)
 			{
 				/*Activate docking demo by sending signal to /dock*/
 				ROS_INFO("[RECHARGE_BEHAVIOUR] Active Cycle DOCK FOUND, charge level: %f.", chargeLevel);
