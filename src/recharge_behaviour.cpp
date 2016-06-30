@@ -164,7 +164,7 @@ void RechargeBehaviour::approachCharger()
 			move_cmd.angular.z = 0.0;
 		}
 		/*Now, if we're currently turning and have successfully turned to within 0.15 of what we want, start driving again.*/
-		else if ((yaw > (desiredAngle - 0.15)) && (yaw < (yaw + 0.15)) && (driving == false))
+		else if ((yaw > (desiredAngle - 0.15)) && (yaw < (desiredAngle + 0.15)) && (driving == false))
 
 		{
 			move_cmd.linear.x = 0.2;
@@ -172,7 +172,7 @@ void RechargeBehaviour::approachCharger()
 			driving = true;
 		}
 		/*And again, if we're within ~0.15 but it's at one of the borders, allow it too.*/
-		else if ((((yaw > 3) && (desiredAngle < -3)) || ((yaw < -3) && (yaw > 3))) && (driving == false))
+		else if ((((yaw > 3) && (desiredAngle < -3)) || ((yaw < -3) && (desiredAngle > 3))) && (driving == false))
 
 		{
 			move_cmd.linear.x = 0.2;
